@@ -2,9 +2,11 @@ var express = require('express'),
     cors = require('cors'),
     mongo = require('mongodb'),
     check = require('validator').check,
-    sanitize = require('validator').sanitize;
+    sanitize = require('validator').sanitize,
+    validate = require('jsonschema').validate;
 var app = express();
 app.use(express.logger());
+app.use(express.bodyParser());
 
 var db = null;
 mongo.MongoClient.connect(process.env.MONGOHQ_URL, function(err, theDb) {
@@ -15,6 +17,49 @@ mongo.MongoClient.connect(process.env.MONGOHQ_URL, function(err, theDb) {
         return console.log("Connected to mongo at " + process.env.MONGOHQ_URL);
     }
 });
+
+var event_schema = {
+    type: "object",
+    properties: {
+        start_date: {
+            type: "string",
+            format: "date-time",
+            required: true
+        },
+        end_date: {
+            type: "string",
+            format: "date-time"
+        },
+        type: {
+            type: "string",
+            required: true
+        },
+        details: {
+            type: "object",
+            properties: {
+                name: {
+                    type: "string",
+                    required: true
+                },
+                description: {
+                    type: "string"
+                }
+            }
+        },
+        creator: {
+            type: "object",
+            properties: {
+                email: {
+                    type: "string"
+                },
+                name: {
+                    type: "string",
+                    required: true
+                }
+            }
+        }
+    }
+};
 
 app.get('/', function(req, res) {
     return res.sendfile('index.html');
@@ -107,6 +152,26 @@ app.get('/1.0/events/:event_id', cors(), function(req, res) {
         } else {
             return res.status(404).send({error: 'That event doesn\'t exist.'});
         }
+    });
+});
+app.post('/1.0/events', cors(), function(req, res) {
+    if (!db) {
+        return res.status(500).send({error: 'No db available.'});
+    }
+
+    var validation = validate(req.body, event_schema);
+    console.dir(validation);
+
+    if (validation.errors.length > 0) {
+        var errors = [];
+        for (var i = 0; i < validation.errors.length; i++) {
+            errors.push(validation.errors[i].stack);
+        }
+        return res.status(400).send(errors);
+    }
+
+    db.collection('events').insert(req.body, function(err, item) {
+        return res.send(item);
     });
 });
 
