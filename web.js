@@ -80,7 +80,7 @@ app.get('/1.0/events/search', cors(), function(req, res) {
 
     console.log("Query (limit %s): %j", limit, query);
 
-    var results = db.collection('events').find(query).limit(limit).toArray(function(err, items) {
+    db.collection('events').find(query).limit(limit).toArray(function(err, items) {
         if (err) {
             console.dir(err);
         }
@@ -89,6 +89,21 @@ app.get('/1.0/events/search', cors(), function(req, res) {
         return res.send(items);
     });
 
+});
+app.get('/1.0/events/:event_id', cors(), function(req, res) {
+    if (!db) {
+        return res.status(500).send({error: 'No db available.'});
+    }
+
+    var query = {'_id': new mongo.ObjectID(req.params.event_id)};
+
+    db.collection('events').find(query).toArray(function(err, items) {
+        if (err) {
+            console.dir(err);
+        }
+
+        return res.send(items);
+    });
 });
 
 var port = process.env.PORT || 5000;
