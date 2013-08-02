@@ -19,42 +19,45 @@ mongo.MongoClient.connect(process.env.MONGOHQ_URL, function(err, theDb) {
 });
 
 var event_schema = {
-    type: "object",
-    properties: {
-        start_date: {
-            type: "string",
-            format: "date-time",
-            required: true
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "start_date": {
+            "type": "string",
+            "format": "date-time",
+            "required": true
         },
-        end_date: {
-            type: "string",
-            format: "date-time"
+        "end_date": {
+            "type": "string",
+            "format": "date-time"
         },
-        type: {
-            type: "string",
-            required: true
+        "type": {
+            "type": "string",
+            "required": true
         },
-        details: {
-            type: "object",
-            properties: {
-                name: {
-                    type: "string",
-                    required: true
+        "details": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "required": true
                 },
-                description: {
-                    type: "string"
+                "description": {
+                    "type": "string"
                 }
             }
         },
-        creator: {
-            type: "object",
-            properties: {
-                email: {
-                    type: "string"
+        "creator": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "email": {
+                    "type": "string"
                 },
-                name: {
-                    type: "string",
-                    required: true
+                "name": {
+                    "type": "string",
+                    "required": true
                 }
             }
         }
@@ -64,7 +67,7 @@ var event_schema = {
 app.get('/', function(req, res) {
     return res.sendfile('index.html');
 });
-app.get('/1.0/events/search', cors(), function(req, res) {
+app.get('/1.0/events', cors(), function(req, res) {
     if (!db) {
         return res.status(500).send({error: 'No db available.'});
     }
