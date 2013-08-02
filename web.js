@@ -50,6 +50,34 @@ app.get('/1.0/events/search', cors(), function(req, res) {
         }
     }
 
+    if (req.query.from_date && req.query.to_date) {
+        check(req.query.from_date).isDate();
+        check(req.query.to_date).isDate().isAfter(req.query.from_date);
+        var from = new Date(req.query.from_date),
+            to = new Date(req.query.to_date);
+
+        query['$or'] = [
+            {'start_date': {'$gte': from, '$lte': to}},
+            {'end_date': {'$gte': from, '$lte': to}}
+        ];
+    } else if (req.query.from_date) {
+        check(req.query.from_date).isDate();
+
+        var from = new Date(req.query.from_date);
+
+        query['start_date'] = {
+            $gte: from
+        };
+    } else if (req.query.to_date) {
+        check(req.query.to_date).isDate();
+
+        var to = new Date(req.query.to_date);
+
+        query['end_date'] = {
+            $lte: to
+        };
+    }
+
     console.log("Query (limit %s): %j", limit, query);
 
     var results = db.collection('events').find(query).limit(limit).toArray(function(err, items) {
