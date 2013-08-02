@@ -97,12 +97,16 @@ app.get('/1.0/events/:event_id', cors(), function(req, res) {
 
     var query = {'_id': new mongo.ObjectID(req.params.event_id)};
 
-    db.collection('events').find(query).toArray(function(err, items) {
+    db.collection('events').findOne(query, function(err, item) {
         if (err) {
             console.dir(err);
         }
 
-        return res.send(items);
+        if (item) {
+            return res.send(item);
+        } else {
+            return res.status(404).send({error: 'That event doesn\'t exist.'});
+        }
     });
 });
 
